@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     "allauth.socialaccount.providers.google",
     "rest_framework_simplejwt",
     "drf_yasg",  # Swagger/OpenAPI documentation
+    "users.apps.UsersConfig",
 ]
 
 SITE_ID = 1
