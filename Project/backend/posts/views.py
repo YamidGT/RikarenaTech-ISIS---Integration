@@ -138,6 +138,8 @@ class UserPostViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self) -> QuerySet[Post]:  # type: ignore
         """Only authenticated user posts with manual filtering"""
+        if getattr(self, "swagger_fake_view", False):
+            return Post.objects.none()
         queryset = (
             Post.objects.filter(user=self.request.user)
             .select_related("category")
