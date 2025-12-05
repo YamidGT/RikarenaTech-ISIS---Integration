@@ -28,6 +28,9 @@ class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     filter_backends = [filters.SearchFilter]
     search_fields = ["name", "description"]
 
+    class Meta:
+        swagger_tags = ["Posts - Categories"]
+
     # Type hint for request property to help Pylance
     request: Request
 
@@ -59,6 +62,9 @@ class PostFeedViewSet(viewsets.ReadOnlyModelViewSet):
     search_fields = ["title", "content", "location_city", "location_state"]
     ordering_fields = ["created_at", "price", "quantity", "published_at"]
     ordering = ["-published_at", "-created_at"]
+
+    class Meta:
+        swagger_tags = ["Posts - Marketplace"]
 
     # Type hint for request property to help Pylance
     request: Request
@@ -134,11 +140,16 @@ class UserPostViewSet(viewsets.ModelViewSet):
     ordering_fields = ["created_at", "updated_at", "published_at"]
     ordering = ["-created_at"]
 
+    class Meta:
+        swagger_tags = ["Posts - User Management"]
+
     # Type hint for request property to help Pylance
     request: Request
 
     def get_queryset(self) -> QuerySet[Post]:  # type: ignore
         """Only authenticated user posts with manual filtering"""
+        if getattr(self, "swagger_fake_view", False):
+            return Post.objects.none()
         queryset = (
             Post.objects.filter(user=self.request.user)
             .select_related("category")
@@ -242,10 +253,11 @@ class UserPostViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-class PostModerationViewSet(viewsets.ModelViewSet):
+class PostModerationViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    ViewSet for post moderation
+    ViewSet for post moderation - Read and update only, no creation
     Only accessible by moderators and staff
+    Allows: GET (list/detail), PATCH (update), custom actions (approve/reject)
     """
 
     queryset = (
@@ -257,6 +269,9 @@ class PostModerationViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.OrderingFilter]
     ordering_fields = ["created_at", "updated_at"]
     ordering = ["-created_at"]
+
+    class Meta:
+        swagger_tags = ["Posts - Moderation"]
 
     def get_permissions(self):
         """
@@ -284,6 +299,28 @@ class PostModerationViewSet(viewsets.ModelViewSet):
         if self.action in ["update", "partial_update"]:
             return PostModerationSerializer
         return PostDetailSerializer
+
+    def update(self, request, *args, **kwargs):
+        """Allow moderators to update posts"""
+        partial = kwargs.pop("partial", False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        if getattr(instance, "_prefetched_objects_cache", None):
+            instance._prefetched_objects_cache = {}
+
+        return Response(serializer.data)
+
+    def partial_update(self, request, *args, **kwargs):
+        """Allow moderators to partially update posts"""
+        kwargs["partial"] = True
+        return self.update(request, *args, **kwargs)
+
+    def perform_update(self, serializer):
+        """Update post and set reviewer information"""
+        serializer.save(reviewed_by=self.request.user, reviewed_at=timezone.now())
 
     @action(detail=True, methods=["patch"])
     def approve(self, request, pk=None):
