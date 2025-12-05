@@ -22,12 +22,15 @@ from django.urls import include, path
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    # Include app-level urls so /api/ routes resolve
-    path("", include("AuthenticationProject.urls")),
+    # Authentication endpoints
+    path("api/auth/", include("AuthenticationProject.urls")),
+    # App-specific API endpoints
     path("api/posts/", include("posts.urls")),
+    path("api/users/", include("users.urls")),
+    path("api/crops/", include("crops.urls")),
+    path("api/alerts/", include("alerts.urls")),
     # API documentation
     path("docs/", include("docs.urls")),
-    path("api/", include("users.urls")),
 ]
 
 # Serve static files during development
