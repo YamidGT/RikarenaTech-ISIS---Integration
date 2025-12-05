@@ -114,9 +114,19 @@ class SellerUserViewSet(viewsets.ReadOnlyModelViewSet):
             .distinct()
         )
 
+        # Additional filtering
         category = self.request.query_params.get("category")
         if category:
             queryset = queryset.filter(posts__category_id=category)
+
+        # Filter by name (searches in username, first_name, and last_name)
+        name = self.request.query_params.get("name")
+        if name:
+            queryset = queryset.filter(
+                Q(username__icontains=name)
+                | Q(first_name__icontains=name)
+                | Q(last_name__icontains=name)
+            )
 
         # Filter by minimum posts count
         min_posts = self.request.query_params.get("min_posts")
