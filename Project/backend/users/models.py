@@ -1,12 +1,12 @@
 from django.conf import settings
 from django.db import models
 
+
 class Profile(models.Model):
     """  Model for user profiles """
     
     cellphone_number = models.BigIntegerField(unique=True, null=True, blank=True)
-    department_id = models.BigIntegerField(null=True)
-    role = models.CharField(max_length=100)
+    role = models.CharField(max_length=50)
     registration_date = models.DateTimeField(auto_now_add=True)
     picture_url = models.URLField(max_length=200, blank=True, null=True)
 
@@ -32,6 +32,7 @@ class Profile(models.Model):
 
 
 class Department(models.Model):
+
     """ Model for departments """
     name = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
