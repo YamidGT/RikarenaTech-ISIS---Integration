@@ -60,12 +60,10 @@ INSTALLED_APPS = [
     "allauth.socialaccount.providers.google",
     "rest_framework_simplejwt",
     "drf_yasg",  # Swagger/OpenAPI documentation
-    "users.apps.UsersConfig",
-<<<<<<< HEAD
-    "corsheaders", # CORS headers
-=======
+    "users.apps.UsersConfig",    
+    "corsheaders",  # CORS headers
     "storages",  # Django-storages for automatic S3/R2 uploads
->>>>>>> dc9aabd072ed65a557cb0e8c58398ce1fff60f2b
+
 ]
 
 SITE_ID = 1
@@ -265,7 +263,6 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = 1024 * 1024 * 5  # 5MB
 DATA_UPLOAD_MAX_MEMORY_SIZE = FILE_UPLOAD_MAX_MEMORY_SIZE
 FILE_UPLOAD_PERMISSIONS = 0o644
 
-<<<<<<< HEAD
 # CORS Configuration
 CORS_ALLOW_ALL_ORIGINS = True  # Desarrollo: permite cualquier frontend
 CORS_ALLOW_CREDENTIALS = True
@@ -287,8 +284,6 @@ CORS_ALLOW_HEADERS = [
     "x-requested-with",
 ]
 
-
-=======
 # Django-storages configuration for automatic S3/R2 uploads (Django 4.2+)
 STORAGES = {
     "default": {
@@ -298,4 +293,3 @@ STORAGES = {
         "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
 }
->>>>>>> dc9aabd072ed65a557cb0e8c58398ce1fff60f2b

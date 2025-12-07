@@ -1,14 +1,21 @@
 import React, {useEffect, useState} from "react";
 import {Link} from "react-router-dom";
+import { getMarketplacePosts } from "../services/posts.service.ts";
 
 export const Home: React.FC = () => {
     const [items, setItems] = useState([]);
 
     useEffect(() => {
-        fetch("https://6917819021a96359486d20a1.mockapi.io/api/v1/products")
-            .then(r => r.json())
-            .then(data => setItems(data));
+    getMarketplacePosts()
+        .then(data => {
+            console.log("Datos del backend:", data);
+            setItems(data);
+        })
+        .catch(err => {
+            console.error("Error cargando posts:", err);
+        });
     }, []);
+
     return (
         <section className="w-full  bg-neutral-50 flex flex-col items-center">
             {/* Banner */}
