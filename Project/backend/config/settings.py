@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "drf_yasg",  # Swagger/OpenAPI documentation
     "users.apps.UsersConfig",
+    "corsheaders", # CORS headers
 ]
 
 SITE_ID = 1
@@ -69,6 +70,7 @@ SITE_ID = 1
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "allauth.account.middleware.AccountMiddleware",
     "django.middleware.common.CommonMiddleware",
     # "django.middleware.csrf.CsrfViewMiddleware",  # DISABLED
@@ -258,3 +260,26 @@ AWS_QUERYSTRING_AUTH = False
 FILE_UPLOAD_MAX_MEMORY_SIZE = 1024 * 1024 * 5  # 5MB
 DATA_UPLOAD_MAX_MEMORY_SIZE = FILE_UPLOAD_MAX_MEMORY_SIZE
 FILE_UPLOAD_PERMISSIONS = 0o644
+
+# CORS Configuration
+CORS_ALLOW_ALL_ORIGINS = True  # Desarrollo: permite cualquier frontend
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",  # Vite
+    "http://localhost:3000",  # React
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:3000",
+]
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "accept-encoding",
+    "authorization",
+    "content-type",
+    "dnt",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+]
+
+
