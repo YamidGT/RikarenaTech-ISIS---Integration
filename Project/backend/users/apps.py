@@ -7,5 +7,4 @@ class UsersConfig(AppConfig):
     name = "users"
 
     def ready(self):
-        # import users.signals
-        pass
+        import users.signals  # noqa: F401
