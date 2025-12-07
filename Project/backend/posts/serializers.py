@@ -4,6 +4,7 @@ from rest_framework import serializers
 
 from .models import Category, Post, PostImage
 from .services import ImageUploadService
+from users.models import Department, Municipality
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -77,6 +78,26 @@ class PostImageSerializer(serializers.ModelSerializer):
         return value
 
 
+class DepartmentSerializer(serializers.ModelSerializer):
+    """Serializer for departments"""
+
+    class Meta:
+        model = Department
+        fields = ["id", "name"]
+        read_only_fields = ["id", "name"]
+
+
+class MunicipalitySerializer(serializers.ModelSerializer):
+    """Serializer for municipalities with nested department"""
+
+    department = DepartmentSerializer(read_only=True)
+
+    class Meta:
+        model = Municipality
+        fields = ["id", "name", "department"]
+        read_only_fields = ["id", "name", "department"]
+
+
 class UserSerializer(serializers.ModelSerializer):
     """Simple serializer for post owner"""
 
@@ -91,6 +112,7 @@ class PostListSerializer(serializers.ModelSerializer):
 
     user = UserSerializer(read_only=True)
     category = CategorySerializer(read_only=True)
+    municipality = MunicipalitySerializer(read_only=True)
     images = PostImageSerializer(many=True, read_only=True)
     total_value = serializers.ReadOnlyField()
     is_available = serializers.ReadOnlyField()
@@ -108,8 +130,7 @@ class PostListSerializer(serializers.ModelSerializer):
             "quantity",
             "unit_of_measure",
             "total_value",
-            "location_city",
-            "location_state",
+            "municipality",
             "is_featured",
             "view_count",
             "created_at",
@@ -136,6 +157,7 @@ class PostDetailSerializer(serializers.ModelSerializer):
 
     user = UserSerializer(read_only=True)
     category = CategorySerializer(read_only=True)
+    municipality = MunicipalitySerializer(read_only=True)
     images = PostImageSerializer(many=True, read_only=True)
     reviewed_by = UserSerializer(read_only=True)
     total_value = serializers.ReadOnlyField()
@@ -155,8 +177,7 @@ class PostDetailSerializer(serializers.ModelSerializer):
             "quantity",
             "unit_of_measure",
             "total_value",
-            "location_city",
-            "location_state",
+            "municipality",
             "status",
             "visibility",
             "is_featured",
@@ -224,8 +245,7 @@ class PostCreateUpdateSerializer(serializers.ModelSerializer):
             "price",
             "quantity",
             "unit_of_measure",
-            "location_city",
-            "location_state",
+            "municipality",
             "visibility",
             "expires_at",
         ]
@@ -271,7 +291,7 @@ class PostCreateUpdateSerializer(serializers.ModelSerializer):
         return post
 
     def to_representation(self, instance):
-        """Include images and full category object in the response"""
+        """Include images, full category and municipality objects in the response"""
         data = super().to_representation(instance)
 
         # Add images to response
@@ -280,6 +300,10 @@ class PostCreateUpdateSerializer(serializers.ModelSerializer):
         # Add full category object instead of just ID
         if instance.category:
             data["category"] = CategorySerializer(instance.category).data
+        
+        # Add full municipality object with department instead of just ID
+        if instance.municipality:
+            data["municipality"] = MunicipalitySerializer(instance.municipality).data
 
         return data
 
