@@ -1,14 +1,11 @@
-# from django.urls import path
-from rest_framework.routers import DefaultRouter
-
-# TODO: Agregar ViewSets cuando estén implementados
-# from .views import AlertViewSet
-
-# Router para endpoints con ViewSet
-router = DefaultRouter()
-# router.register('', AlertViewSet, basename='alerts')
+from django.urls import path
+from .views import AlertViewSet, AlertCategoryViewSet
 
 urlpatterns = [
-    # Placeholder para futuras rutas de alerts
-    # path("", include(router.urls)),
+    # Create alert
+    path("create/", AlertViewSet.as_view({"post": "create"}), name="alert-create"),
+    # List all alerts
+    path("", AlertViewSet.as_view({"get": "list"}), name="alert-list"),
+    # Alert categories
+    path("categories/", AlertCategoryViewSet.as_view({"get": "list"}), name="alert-categories-list"),
 ]
