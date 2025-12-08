@@ -1,4 +1,3 @@
-
 interface AlertCardProps {
   title: string;
   description: string;
