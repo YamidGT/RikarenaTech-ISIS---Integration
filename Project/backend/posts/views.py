@@ -29,6 +29,7 @@ class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     - Lookup by slug
     """
 
+    swagger_tags = ["Posts - Categories"]
     queryset = Category.objects.filter(is_active=True)
     serializer_class = CategorySerializer
     lookup_field = "slug"
@@ -66,6 +67,7 @@ class PostFeedViewSet(viewsets.ReadOnlyModelViewSet):
     - View counter increment on detail view
     """
 
+    swagger_tags = ["Posts - Public Feed"]
     serializer_class = PostListSerializer
     permission_classes = [permissions.AllowAny]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
@@ -169,6 +171,7 @@ class UserPostViewSet(viewsets.ModelViewSet):
     - Automatic image upload via django-storages
     """
 
+    swagger_tags = ["Posts - User Management"]
     permission_classes = [IsAuthenticated]
     filter_backends = [filters.OrderingFilter]
     ordering_fields = ["created_at", "updated_at", "published_at"]

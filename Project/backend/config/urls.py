@@ -29,7 +29,6 @@ urlpatterns = [
     path("api/users/", include("users.urls")),
     path("api/crops/", include("crops.urls")),
     path("api/alerts/", include("alerts.urls")),
-    path("api/crops", include("crops.urls")),
     # API documentation
     path("docs/", include("docs.urls")),
 ]

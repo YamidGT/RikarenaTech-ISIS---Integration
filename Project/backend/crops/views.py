@@ -1,9 +1,10 @@
-from rest_framework import viewsets, permissions
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework import permissions, viewsets
 from rest_framework.pagination import PageNumberPagination
 
-from .models import Product, Crop
-from .serializers import ProductSerializer, CropSerializer
+from .models import Crop, Product
 from .permissions import IsOwner
+from .serializers import CropSerializer, ProductSerializer
 
 
 class DefaultPagination(PageNumberPagination):
@@ -12,6 +13,7 @@ class DefaultPagination(PageNumberPagination):
     max_page_size = 100
 
 
+@swagger_auto_schema(tags=["Crops - Products"])
 class ProductViewSet(viewsets.ReadOnlyModelViewSet):
     """
     GET /api/products
@@ -24,10 +26,11 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
     pagination_class = DefaultPagination
 
 
+@swagger_auto_schema(tags=["Crops - Management"])
 class CropViewSet(viewsets.ModelViewSet):
     """
     POST /api/crops -> crear un cultivo (esta tarea)
-    GET /api/crops -> (futuro) listar (idealmente “mine”)
+    GET /api/crops -> (futuro) listar (idealmente "mine")
     GET /api/crops/{id} -> (futuro) detalle si owner
     PATCH /api/crops/{id} -> (futuro) editar si owner
     DELETE /api/crops/{id} -> (futuro) eliminar si owner
@@ -35,7 +38,6 @@ class CropViewSet(viewsets.ModelViewSet):
 
     serializer_class = CropSerializer
     pagination_class = DefaultPagination
-
 
     def get_permissions(self):
         # Solo autenticados pueden interactuar con crops.
@@ -50,11 +52,12 @@ class CropViewSet(viewsets.ModelViewSet):
             base = [permissions.IsAuthenticated]
         else:
             base = [permissions.IsAuthenticated]
+
         # Para operaciones sobre objeto (retrieve/update/destroy), exigir ownership
         if self.action in ["retrieve", "update", "partial_update", "destroy"]:
             base.append(IsOwner)
-            return [perm() for perm in base]
 
+        return [perm() for perm in base]
 
     def get_queryset(self):
         """

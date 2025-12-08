@@ -137,6 +137,7 @@ class SellerUserViewSet(viewsets.ReadOnlyModelViewSet):
     Read-only access to search and list sellers
     """
 
+    swagger_tags = ["Users - Sellers Directory"]
     serializer_class = SellerUserSerializer
     permission_classes = [IsAuthenticated]
     lookup_field = "username"  # Use username instead of id

@@ -1,11 +1,12 @@
 from rest_framework import serializers
-from .models import Product, Crop
+
+from .models import Crop, Product
 
 
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = "all"
+        fields = "__all__"
 
 
 class CropSerializer(serializers.ModelSerializer):

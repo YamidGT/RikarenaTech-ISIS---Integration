@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import Product, Crop
+
+from .models import Crop, Product
 
 
 @admin.register(Product)
