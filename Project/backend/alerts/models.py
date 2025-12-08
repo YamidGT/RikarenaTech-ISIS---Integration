@@ -52,3 +52,16 @@ class Alert(models.Model):
         indexes = [
             models.Index(fields=['-created_at']),
         ]
+
+
+class AlertImage(models.Model):
+    """Images for alerts - supports multiple images per alert"""
+    
+    alert = models.ForeignKey(Alert, on_delete=models.CASCADE, related_name='images')
+    image = models.ImageField(upload_to='alerts/%Y/%m/%d/', help_text='Alert image or screenshot')
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['uploaded_at']
+        verbose_name = 'Alert Image'
+        verbose_name_plural = 'Alert Images'
