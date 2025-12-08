@@ -37,32 +37,32 @@ class CropViewSet(viewsets.ModelViewSet):
     pagination_class = DefaultPagination
 
 
-def get_permissions(self):
-    # Solo autenticados pueden interactuar con crops.
-    if self.action in [
-        "create",
-        "list",
-        "retrieve",
-        "update",
-        "partial_update",
-        "destroy",
-    ]:
-        base = [permissions.IsAuthenticated]
-    else:
-        base = [permissions.IsAuthenticated]
-    # Para operaciones sobre objeto (retrieve/update/destroy), exigir ownership
-    if self.action in ["retrieve", "update", "partial_update", "destroy"]:
-        base.append(IsOwner)
-        return [perm() for perm in base]
+    def get_permissions(self):
+        # Solo autenticados pueden interactuar con crops.
+        if self.action in [
+            "create",
+            "list",
+            "retrieve",
+            "update",
+            "partial_update",
+            "destroy",
+        ]:
+            base = [permissions.IsAuthenticated]
+        else:
+            base = [permissions.IsAuthenticated]
+        # Para operaciones sobre objeto (retrieve/update/destroy), exigir ownership
+        if self.action in ["retrieve", "update", "partial_update", "destroy"]:
+            base.append(IsOwner)
+            return [perm() for perm in base]
 
 
-def get_queryset(self):
-    """
-    Seguridad por defecto: limitar al owner cuando se liste/lea desde este ViewSet.
-    """
-    user = self.request.user
-    if not user or not user.is_authenticated:
-        return Crop.objects.none()
-    return Crop.objects.filter(user_id=getattr(user, "id", None)).order_by(
-        "-created_at"
-    )
+    def get_queryset(self):
+        """
+        Seguridad por defecto: limitar al owner cuando se liste/lea desde este ViewSet.
+        """
+        user = self.request.user
+        if not user or not user.is_authenticated:
+            return Crop.objects.none()
+        return Crop.objects.filter(user_id=getattr(user, "id", None)).order_by(
+            "-created_at"
+        )
