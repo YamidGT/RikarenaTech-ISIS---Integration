@@ -167,6 +167,10 @@ AUTHENTICATION_BACKENDS = [
     "allauth.account.auth_backends.AuthenticationBackend",
 ]
 
+# Where to send users after login/logout (frontend app)
+LOGIN_REDIRECT_URL = "http://localhost:5173/products"
+ACCOUNT_LOGOUT_REDIRECT_URL = "http://localhost:5173/"
+
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "config.authentication.NoCSRFSessionAuthentication",
