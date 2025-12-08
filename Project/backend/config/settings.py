@@ -175,7 +175,7 @@ REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": [
         "config.renderers.StandardJSONRenderer",
     ],
-    "DEFAULT_PAGINATION_CLASS": ["rest_framework.pagination.PageNumberPagination", 'rest_framework.parsers.MultiPartParser'],
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 20,
     "EXCEPTION_HANDLER": "config.exceptions.custom_exception_handler",
 }
@@ -242,6 +242,7 @@ AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_STORAGE_BUCKET_NAME")
 AWS_S3_REGION_NAME = os.getenv("AWS_S3_REGION_NAME", "auto")
 
 # Cloudflare R2 specific settings (comment out if using standard S3)
+AWS_S3_REGION_NAME = os.getenv("AWS_S3_REGION_NAME", "auto")
 AWS_S3_ENDPOINT_URL = os.getenv("AWS_S3_ENDPOINT_URL")
 AWS_S3_CUSTOM_DOMAIN = os.getenv("AWS_S3_CUSTOM_DOMAIN")
 
@@ -254,6 +255,7 @@ SUPPORTED_IMAGE_FORMATS = ["image/jpeg", "image/jpg", "image/png", "image/webp"]
 AWS_S3_OBJECT_PARAMETERS = {
     "CacheControl": "max-age=86400",  # 24 hours
 }
+
 AWS_DEFAULT_ACL = "public-read"
 AWS_S3_FILE_OVERWRITE = False
 AWS_QUERYSTRING_AUTH = False
