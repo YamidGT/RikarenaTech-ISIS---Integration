@@ -33,7 +33,29 @@ SECRET_KEY = os.getenv(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG", "True").lower() in ("true", "1")
 
+# Frontend URL Configuration
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
+
+# Dynamic ALLOWED_HOSTS configuration
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+
+# Add frontend domain to ALLOWED_HOSTS if it's not localhost
+from urllib.parse import urlparse
+
+frontend_parsed = urlparse(FRONTEND_URL)
+if frontend_parsed.hostname and frontend_parsed.hostname not in [
+    "localhost",
+    "127.0.0.1",
+]:
+    if frontend_parsed.hostname not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(frontend_parsed.hostname)
+
+    # Also add parent domain for subdomain support
+    domain_parts = frontend_parsed.hostname.split(".")
+    if len(domain_parts) >= 2:
+        parent_domain = ".".join(domain_parts[-2:])
+        if f".{parent_domain}" not in ALLOWED_HOSTS:
+            ALLOWED_HOSTS.append(f".{parent_domain}")
 
 # Oauth2 Configuration
 
@@ -217,6 +239,17 @@ SOCIALACCOUNT_PROVIDERS = {
 }
 
 SOCIALACCOUNT_ADAPTER = "authentication.adapters.CustomSocialAccountAdapter"
+ACCOUNT_ADAPTER = "authentication.adapters.CustomAccountAdapter"
+
+# Allauth Configuration for redirects
+LOGIN_REDIRECT_URL = f"{FRONTEND_URL}/dashboard"
+LOGOUT_REDIRECT_URL = f"{FRONTEND_URL}/"
+ACCOUNT_LOGOUT_REDIRECT_URL = f"{FRONTEND_URL}/"
+
+# Additional allauth settings
+SOCIALACCOUNT_LOGIN_ON_GET = True
+ACCOUNT_EMAIL_VERIFICATION = "none"
+SOCIALACCOUNT_AUTO_SIGNUP = True
 
 # URL Configuration
 APPEND_SLASH = True  # Enable automatic slash appending
@@ -274,10 +307,7 @@ STORAGES = {
 
 # CORS Configuration
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",  # For local development
-    "http://127.0.0.1:3000",
-    "http://localhost:5173",  # For Vite dev server
-    "http://127.0.0.1:5173",
+    FRONTEND_URL,
 ]
 
 # For development, you can also use (less secure):
@@ -294,4 +324,43 @@ CORS_ALLOW_HEADERS = [
     "user-agent",
     "x-csrftoken",
     "x-requested-with",
+]
+
+# Session Configuration for Subdomains
+# Extract domain from FRONTEND_URL for subdomain sharing
+from urllib.parse import urlparse
+
+frontend_parsed = urlparse(FRONTEND_URL)
+
+# Determine session cookie domain based on environment
+if DEBUG:
+    # For development (localhost), don't set domain to allow cross-port access
+    SESSION_COOKIE_DOMAIN = None
+    print(f"[DEBUG] Development mode - SESSION_COOKIE_DOMAIN set to None for localhost")
+else:
+    # For production: use parent domain (e.g., ".example.com")
+    if frontend_parsed.hostname and "." in frontend_parsed.hostname:
+        domain_parts = frontend_parsed.hostname.split(".")
+        if len(domain_parts) >= 2 and domain_parts[-1] != "localhost":
+            SESSION_COOKIE_DOMAIN = f".{'.'.join(domain_parts[-2:])}"
+            print(
+                f"[DEBUG] Production mode - SESSION_COOKIE_DOMAIN set to: {SESSION_COOKIE_DOMAIN}"
+            )
+        else:
+            SESSION_COOKIE_DOMAIN = None
+    else:
+        SESSION_COOKIE_DOMAIN = None
+
+SESSION_COOKIE_SECURE = not DEBUG  # Use secure cookies in production
+SESSION_COOKIE_HTTPONLY = False  # Allow JavaScript access for development
+SESSION_COOKIE_SAMESITE = "Lax"  # Allow cross-site requests for authentication
+SESSION_COOKIE_AGE = 86400  # 24 hours
+SESSION_SAVE_EVERY_REQUEST = True  # Refresh session on each request
+
+# CSRF Configuration for Subdomains
+CSRF_COOKIE_DOMAIN = SESSION_COOKIE_DOMAIN
+CSRF_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SAMESITE = "Lax"
+CSRF_TRUSTED_ORIGINS = [
+    FRONTEND_URL,
 ]
