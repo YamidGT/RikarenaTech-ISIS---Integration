@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 import os
 from pathlib import Path
+from decouple import config as env_config
 
 from dotenv import load_dotenv
 
@@ -62,6 +63,8 @@ INSTALLED_APPS = [
     "drf_yasg",  # Swagger/OpenAPI documentation
     "users.apps.UsersConfig",
     "storages",  # Django-storages for automatic S3/R2 uploads
+    "alerts.apps.AlertsConfig",
+    "crops.apps.CropsConfig",
 ]
 
 SITE_ID = 1
@@ -172,7 +175,7 @@ REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": [
         "config.renderers.StandardJSONRenderer",
     ],
-    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "DEFAULT_PAGINATION_CLASS": ["rest_framework.pagination.PageNumberPagination", 'rest_framework.parsers.MultiPartParser'],
     "PAGE_SIZE": 20,
     "EXCEPTION_HANDLER": "config.exceptions.custom_exception_handler",
 }
@@ -269,3 +272,6 @@ STORAGES = {
         "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
 }
+
+# Configurar el storage backend
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
