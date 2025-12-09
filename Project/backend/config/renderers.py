@@ -75,10 +75,6 @@ class StandardJSONRenderer(JSONRenderer):
             "status_code": status_code,
         }
 
-        # Add pagination metadata if present
-        if self._has_pagination_data(data):
-            formatted_data["meta"] = self._extract_pagination_meta(data)
-
         # Add request context for debugging (staff users only)
         if (
             request
@@ -162,12 +158,13 @@ class StandardJSONRenderer(JSONRenderer):
         if not isinstance(data, dict):
             return None
 
+        results = data.get("results", [])
         return {
             "pagination": {
-                "count": data.get("count"),
+                "count": data.get("count", 0),
                 "next": data.get("next"),
                 "previous": data.get("previous"),
-                "page_size": len(data.get("results", [])),
+                "page_size": len(results) if results else 0,
                 "has_next": data.get("next") is not None,
                 "has_previous": data.get("previous") is not None,
             }
