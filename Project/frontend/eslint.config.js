@@ -43,12 +43,12 @@ export default tseslint.config(
     },
     plugins: {
       react,
+      "@typescript-eslint": tseslint.plugin,
       import: reactImport,
       "react-hooks": reactHooks,
       "react-refresh": reactRefresh,
       prettier,
       "jsx-a11y": a11y,
-      "@typescript-eslint": tseslint.plugin,
     },
     rules: {
       ...js.configs.recommended.rules,
@@ -57,7 +57,7 @@ export default tseslint.config(
       ...react.configs["jsx-runtime"].rules,
       ...reactHooks.configs.recommended.rules,
 
-      "react/prop-types": "off", // using TypeScript
+      "react/prop-types": "off",
       "react/no-unstable-nested-components": "warn",
       "react/jsx-no-target-blank": "off",
 
@@ -80,6 +80,15 @@ export default tseslint.config(
           ],
           "newlines-between": "always-and-inside-groups",
           alphabetize: { order: "asc", caseInsensitive: true },
+          pathGroups: [
+            {
+              pattern: "@/**",
+              group: "internal",
+              position: "after",
+            },
+          ],
+          pathGroupsExcludedImportTypes: ["builtin"],
+          distinctGroup: true,
         },
       ],
 
@@ -91,13 +100,11 @@ export default tseslint.config(
         { allowConstantExport: true },
       ],
 
-      // JSX Accessibility
       "jsx-a11y/alt-text": "warn",
       "jsx-a11y/anchor-is-valid": "warn",
       "jsx-a11y/click-events-have-key-events": "warn",
       "jsx-a11y/no-static-element-interactions": "warn",
 
-      // Prettier (code formatting)
       "prettier/prettier": [
         "error",
         {
@@ -109,7 +116,6 @@ export default tseslint.config(
         },
       ],
 
-      // Forbidden relative paths and absolute paths, except './'
       "no-restricted-imports": [
         "error",
         {
@@ -117,8 +123,7 @@ export default tseslint.config(
           paths: [
             {
               name: "@public",
-              message:
-                "Use the `@public/` alias to access resources in `public`.",
+              message: "Use the `@public/` alias to access resources in `public`.",
             },
             {
               name: "@",
@@ -128,5 +133,5 @@ export default tseslint.config(
         },
       ],
     },
-  }
+  },
 );
