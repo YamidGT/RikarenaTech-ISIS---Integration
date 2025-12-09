@@ -69,10 +69,13 @@ class CropSerializer(serializers.ModelSerializer):
             )
 
         # Asociar el owner del registro desde el usuario autenticado
-        validated_data["user_id"] = getattr(request.user, "id", None)
-        if validated_data["user_id"] is None:
+        # assign the actual user instance to the ForeignKey field name `user`
+        user = getattr(request, "user", None)
+        if user is None or not getattr(user, "id", None):
             raise serializers.ValidationError(
                 "No fue posible identificar al usuario autenticado."
             )
+
+        validated_data["user"] = user
 
         return super().create(validated_data)
