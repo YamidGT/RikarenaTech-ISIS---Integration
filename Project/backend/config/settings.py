@@ -88,6 +88,7 @@ INSTALLED_APPS = [
     "storages",  # Django-storages for automatic S3/R2 uploads
     "alerts.apps.AlertsConfig",
     "crops.apps.CropsConfig",
+    "simple_history",
 ]
 
 SITE_ID = 1
@@ -102,6 +103,7 @@ MIDDLEWARE = [
     # "django.middleware.csrf.CsrfViewMiddleware",  # DISABLED
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
+    "simple_history.middleware.HistoryRequestMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
@@ -373,3 +375,6 @@ CSRF_COOKIE_SAMESITE = "Lax"
 CSRF_TRUSTED_ORIGINS = [
     FRONTEND_URL,
 ]
+
+# Django Simple History Configuration
+SIMPLE_HISTORY_FILEFIELD_TO_CHARFIELD = True

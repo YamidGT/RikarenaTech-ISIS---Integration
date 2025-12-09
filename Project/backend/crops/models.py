@@ -1,11 +1,13 @@
 from django.contrib.auth.models import User
 from django.db import models
+from simple_history.models import HistoricalRecords
 
 
 # Create your models here.
 class Product(models.Model):
     product_id = models.BigAutoField(primary_key=True)
     name = models.CharField(max_length=255)
+    history = HistoricalRecords()
 
     class Meta:
         db_table = "Products"
@@ -63,6 +65,7 @@ class Crop(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    history = HistoricalRecords()
 
     class Meta:
         db_table = "Crop"

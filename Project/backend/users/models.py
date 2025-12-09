@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from simple_history.models import HistoricalRecords
 
 
 class Profile(models.Model):
@@ -27,6 +28,7 @@ class Profile(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    history = HistoricalRecords()
 
     def __str__(self):
         return f"{self.user.username} - {self.role}"
@@ -42,6 +44,7 @@ class Department(models.Model):
     name = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    history = HistoricalRecords()
 
     def __str__(self):
         return self.name
@@ -61,6 +64,7 @@ class Municipality(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    history = HistoricalRecords()
 
     def __str__(self):
         return f"{self.name}, {self.department.name}"
