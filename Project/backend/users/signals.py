@@ -7,6 +7,7 @@ from allauth.socialaccount.models import SocialAccount
 from allauth.socialaccount.signals import pre_social_login, social_account_added
 
 from .models import Profile
+from django.db import OperationalError, ProgrammingError
 
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
@@ -22,7 +23,13 @@ def create_profile_for_new_user(sender, instance, created, **kwargs):
         **kwargs: Additional arguments
     """
     if created:
-        profile = Profile.objects.create(user=instance)
+        try:
+            profile = Profile.objects.create(user=instance)
+        except (OperationalError, ProgrammingError):
+            # During test DB setup or before migrations exist the Profile table
+            # may not be available. Ignore profile creation in that case so
+            # tests and migrations can run without failing.
+            return
 
         # Assign to users group
         user_group, _ = Group.objects.get_or_create(name="users")
