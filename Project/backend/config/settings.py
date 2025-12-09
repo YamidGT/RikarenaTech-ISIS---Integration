@@ -135,13 +135,17 @@ WSGI_APPLICATION = "config.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": os.getenv("DATABASE_ENGINE", "django.db.backends.sqlite3"),
-        "NAME": BASE_DIR / os.getenv("DATABASE_NAME", "db.sqlite3"),
+        "NAME": os.getenv("DATABASE_NAME", "db.sqlite3"),
         "USER": os.getenv("DATABASE_USER", ""),
         "PASSWORD": os.getenv("DATABASE_PASSWORD", ""),
         "HOST": os.getenv("DATABASE_HOST", ""),
         "PORT": os.getenv("DATABASE_PORT", ""),
     }
 }
+
+# For SQLite, keep the DB file inside BASE_DIR
+if DATABASES["default"]["ENGINE"] == "django.db.backends.sqlite3":
+    DATABASES["default"]["NAME"] = BASE_DIR / DATABASES["default"]["NAME"]
 
 
 # Password validation
