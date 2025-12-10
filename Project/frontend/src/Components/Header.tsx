@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { NavLink } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 
 interface UserGroup {
   id: number;
@@ -9,42 +9,83 @@ interface UserGroup {
 export const Header: React.FC = () => {
   const [unreadAlertsCount, setUnreadAlertsCount] = useState(0);
   const [isModerator, setIsModerator] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    // Fetch user data to check if moderator
-    fetch(`${import.meta.env.VITE_API_BASE_URL}/users/me/`, {
-      method: "GET",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    })
-      .then((r) => r.json())
-      .then((response) => {
-        if (response.data && response.data.groups) {
-          const groups = response.data.groups;
-          const hasModerator = groups.some(
-            (group: UserGroup) => group.name === "moderators",
-          );
-          setIsModerator(hasModerator);
+    const controller = new AbortController();
+
+    const fetchUserData = async () => {
+      try {
+        const res = await fetch(
+          `${import.meta.env.VITE_API_BASE_URL}/users/me/`,
+          {
+            method: "GET",
+            credentials: "include",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            signal: controller.signal,
+          },
+        );
+
+        if (controller.signal.aborted) return;
+
+        if (res.status === 401 || res.status === 403) {
+          setIsAuthenticated(false);
+          setIsModerator(false);
+          return;
         }
-      })
-      .catch((error) => {
-        console.error("Error fetching user data:", error);
-      });
 
-    // Fetch unread alerts count
-    const lastVisitTimestamp = localStorage.getItem("lastAlertsVisit");
+        if (!res.ok) {
+          setIsAuthenticated(false);
+          return;
+        }
 
-    fetch(`${import.meta.env.VITE_API_BASE_URL}/alerts/`, {
-      method: "GET",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    })
-      .then((r) => r.json())
-      .then((response) => {
+        const response = await res.json();
+        if (controller.signal.aborted) return;
+
+        if (response.data) {
+          setIsAuthenticated(true);
+          if (response.data.groups) {
+            const groups = response.data.groups;
+            const hasModerator = groups.some(
+              (group: UserGroup) => group.name === "moderators",
+            );
+            setIsModerator(hasModerator);
+          }
+        } else {
+          setIsAuthenticated(false);
+          setIsModerator(false);
+        }
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          console.error("Error fetching user data:", error);
+          setIsAuthenticated(false);
+          setIsModerator(false);
+        }
+      }
+    };
+
+    const fetchAlerts = async () => {
+      const lastVisitTimestamp = localStorage.getItem("lastAlertsVisit");
+      try {
+        const res = await fetch(
+          `${import.meta.env.VITE_API_BASE_URL}/alerts/`,
+          {
+            method: "GET",
+            credentials: "include",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            signal: controller.signal,
+          },
+        );
+
+        if (controller.signal.aborted || !res.ok) return;
+
+        const response = await res.json();
+        if (controller.signal.aborted) return;
+
         if (response.data && Array.isArray(response.data)) {
           if (!lastVisitTimestamp) {
             setUnreadAlertsCount(response.data.length);
@@ -57,10 +98,17 @@ export const Header: React.FC = () => {
             setUnreadAlertsCount(newAlerts.length);
           }
         }
-      })
-      .catch((error) => {
-        console.error("Error fetching alerts count:", error);
-      });
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          console.error("Error fetching alerts count:", error);
+        }
+      }
+    };
+
+    fetchUserData();
+    fetchAlerts();
+
+    return () => controller.abort();
   }, []);
 
   return (
@@ -69,9 +117,11 @@ export const Header: React.FC = () => {
         {/* Logo + Links */}
         <div className="flex items-center space-x-8">
           {/* Logo */}
-          <h1 className="text-[40px] font-bold font-[Outfit] text-[#448502]">
-            ISIS
-          </h1>
+          <Link to="/">
+            <h1 className="text-[40px] font-bold font-[Outfit] text-[#448502]">
+              ISIS
+            </h1>
+          </Link>
 
           {/* Nav Links */}
           <nav className="hidden sm:flex items-center space-x-6">
@@ -100,145 +150,152 @@ export const Header: React.FC = () => {
               Vendedores
             </NavLink>
 
-            <NavLink
-              to="/profile"
-              className={({ isActive }) =>
-                `text-sm font-[Inter] ${
-                  isActive
-                    ? "text-[#448502] font-semibold"
-                    : "text-[#171A1F] hover:text-[#3C7602]"
-                }`
-              }
-            >
-              Mi perfil
-            </NavLink>
-
-            {/* Botón con dropdown para crear */}
-            <div className="relative group">
-              <button className="text-sm font-[Inter] text-[#171A1F] hover:text-[#3C7602] transition flex items-center">
-                Crear <span className="ml-1">▾</span>
-              </button>
-
-              {/* Dropdown */}
-              <div className="absolute left-0 mt-2 w-40 bg-white shadow-md rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+            {isAuthenticated && (
+              <>
                 <NavLink
-                  to="/create_post"
+                  to="/profile"
                   className={({ isActive }) =>
-                    `block px-4 py-2 text-sm font-[Inter] transition ${
+                    `text-sm font-[Inter] ${
                       isActive
                         ? "text-[#448502] font-semibold"
-                        : "text-[#171A1F] hover:bg-gray-100 hover:text-[#448502]"
+                        : "text-[#171A1F] hover:text-[#3C7602]"
                     }`
                   }
                 >
-                  Crear publicación
+                  Mi perfil
                 </NavLink>
 
+                {/* Botón con dropdown para crear */}
+                <div className="relative group">
+                  <button className="text-sm font-[Inter] text-[#171A1F] hover:text-[#3C7602] transition flex items-center">
+                    Crear <span className="ml-1">▾</span>
+                  </button>
+
+                  {/* Dropdown */}
+                  <div className="absolute left-0 mt-2 w-40 bg-white shadow-md rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+                    <NavLink
+                      to="/create_post"
+                      className={({ isActive }) =>
+                        `block px-4 py-2 text-sm font-[Inter] transition ${
+                          isActive
+                            ? "text-[#448502] font-semibold"
+                            : "text-[#171A1F] hover:bg-gray-100 hover:text-[#448502]"
+                        }`
+                      }
+                    >
+                      Crear publicación
+                    </NavLink>
+
+                    <NavLink
+                      to="/create_crop"
+                      className={({ isActive }) =>
+                        `block px-4 py-2 text-sm font-[Inter] transition ${
+                          isActive
+                            ? "text-[#448502] font-semibold"
+                            : "text-[#171A1F] hover:bg-gray-100 hover:text-[#448502]"
+                        }`
+                      }
+                    >
+                      Crear cultivo
+                    </NavLink>
+                  </div>
+                </div>
+
                 <NavLink
-                  to="/create_crop"
+                  to="/my_products"
                   className={({ isActive }) =>
-                    `block px-4 py-2 text-sm font-[Inter] transition ${
+                    `text-sm font-[Inter] ${
                       isActive
                         ? "text-[#448502] font-semibold"
-                        : "text-[#171A1F] hover:bg-gray-100 hover:text-[#448502]"
+                        : "text-[#171A1F] hover:text-[#3C7602]"
                     }`
                   }
                 >
-                  Crear cultivo
+                  Mis productos y cultivos
                 </NavLink>
-              </div>
-            </div>
 
-            <NavLink
-              to="/my_products"
-              className={({ isActive }) =>
-                `text-sm font-[Inter] ${
-                  isActive
-                    ? "text-[#448502] font-semibold"
-                    : "text-[#171A1F] hover:text-[#3C7602]"
-                }`
-              }
-            >
-              Mis productos y cultivos
-            </NavLink>
+                <NavLink
+                  to="/alerts"
+                  className={({ isActive }) =>
+                    `text-sm font-[Inter] relative ${
+                      isActive
+                        ? "text-[#448502] font-semibold"
+                        : "text-[#171A1F] hover:text-[#3C7602]"
+                    }`
+                  }
+                >
+                  Alertas
+                  {unreadAlertsCount > 0 && (
+                    <span className="absolute -top-2 -right-3 bg-green-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                      {unreadAlertsCount}
+                    </span>
+                  )}
+                </NavLink>
 
-            <NavLink
-              to="/alerts"
-              className={({ isActive }) =>
-                `text-sm font-[Inter] relative ${
-                  isActive
-                    ? "text-[#448502] font-semibold"
-                    : "text-[#171A1F] hover:text-[#3C7602]"
-                }`
-              }
-            >
-              Alertas
-              {unreadAlertsCount > 0 && (
-                <span className="absolute -top-2 -right-3 bg-green-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                  {unreadAlertsCount}
-                </span>
-              )}
-            </NavLink>
-
-            {isModerator && (
-              <NavLink
-                to="/moderador"
-                className={({ isActive }) =>
-                  `text-sm font-[Inter] ${
-                    isActive
-                      ? "text-[#448502] font-semibold"
-                      : "text-[#171A1F] hover:text-[#3C7602]"
-                  }`
-                }
-              >
-                Moderador
-              </NavLink>
+                {isModerator && (
+                  <NavLink
+                    to="/moderador"
+                    className={({ isActive }) =>
+                      `text-sm font-[Inter] ${
+                        isActive
+                          ? "text-[#448502] font-semibold"
+                          : "text-[#171A1F] hover:text-[#3C7602]"
+                      }`
+                    }
+                  >
+                    Moderador
+                  </NavLink>
+                )}
+              </>
             )}
           </nav>
         </div>
 
         {/* Botón */}
         <div className="gap-2 flex">
-          <a
-            href={`${import.meta.env.VITE_API_BASE_URL}/auth/google/login/?process=login`}
-          >
-            <button className=" sm:flex items-center justify-center px-4 py-2 h-9 rounded-md bg-[#448502] text-white text-sm font-medium hover:bg-[#3C7602] active:bg-[#2F5D01] font-[Inter] transition">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="w-4 h-4 mr-2"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 12h14M12 5l7 7-7 7"
-                />
-              </svg>
-              Login
-            </button>
-          </a>
-          <a href={`${import.meta.env.VITE_API_BASE_URL}/auth/logout/`}>
-            <button className=" sm:flex items-center justify-center px-4 py-2 h-9 rounded-md bg-[#448502] text-white text-sm font-medium hover:bg-[#3C7602] active:bg-[#2F5D01] font-[Inter] transition">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="w-4 h-4 mr-2"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 12h14M12 5l7 7-7 7"
-                />
-              </svg>
-              Logout
-            </button>
-          </a>
+          {isAuthenticated ? (
+            <a href={`${import.meta.env.VITE_API_BASE_URL}/auth/logout/`}>
+              <button className=" sm:flex items-center justify-center px-4 py-2 h-9 rounded-md bg-[#448502] text-white text-sm font-medium hover:bg-[#3C7602] active:bg-[#2F5D01] font-[Inter] transition">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-4 h-4 mr-2"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 12h14M12 5l7 7-7 7"
+                  />
+                </svg>
+                Logout
+              </button>
+            </a>
+          ) : (
+            <a
+              href={`${import.meta.env.VITE_API_BASE_URL}/auth/google/login/?process=login`}
+            >
+              <button className=" sm:flex items-center justify-center px-4 py-2 h-9 rounded-md bg-[#448502] text-white text-sm font-medium hover:bg-[#3C7602] active:bg-[#2F5D01] font-[Inter] transition">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-4 h-4 mr-2"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 12h14M12 5l7 7-7 7"
+                  />
+                </svg>
+                Login
+              </button>
+            </a>
+          )}
         </div>
 
         {/* Menú móvil (futuro) */}
