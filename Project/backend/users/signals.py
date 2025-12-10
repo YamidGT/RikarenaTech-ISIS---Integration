@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.contrib.auth.models import Group
+from django.contrib.auth.signals import user_logged_in
 from django.db import OperationalError, ProgrammingError
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -36,16 +37,10 @@ def create_profile_for_new_user(sender, instance, created, **kwargs):
         instance.groups.add(user_group)
 
         # Try to update profile picture if Google social account exists
-        try:
-            social_account = SocialAccount.objects.filter(
-                user=instance, provider="google"
-            ).first()
-
-            if social_account and "picture" in social_account.extra_data:
-                profile.picture_url = social_account.extra_data["picture"]
-                profile.save()
-        except SocialAccount.DoesNotExist:
-            pass  # No social account, continue normally
+        social_account = SocialAccount.objects.filter(user=instance).first()
+        if social_account and "picture" in social_account.extra_data:
+            profile.picture_url = social_account.extra_data["picture"]
+            profile.save()
     else:
         # Create profile if it doesn't exist for existing users
         if not hasattr(instance, "profile"):
@@ -98,14 +93,34 @@ def _update_user_profile_picture(sociallogin):
     if not (user and hasattr(user, "profile")):
         return
 
-    # Only process Google accounts
-    if sociallogin.account.provider != "google":
-        return
-
     extra_data = sociallogin.account.extra_data
 
     # Google provides the image in the 'picture' field
     if "picture" in extra_data:
         picture_url = extra_data["picture"]
-        user.profile.picture_url = picture_url
-        user.profile.save(update_fields=["picture_url"])
+        if user.profile.picture_url != picture_url:
+            user.profile.picture_url = picture_url
+            user.profile.save(update_fields=["picture_url"])
+
+
+@receiver(user_logged_in)
+def update_profile_picture_on_login(sender, request, user, **kwargs):
+    """
+    Ensure profile picture is synced from Google on every login.
+    Works for existing accounts even if previous signals didn't run.
+    """
+    try:
+        social_account = SocialAccount.objects.filter(user=user).first()
+    except OperationalError:
+        return
+
+    if not social_account:
+        return
+
+    # Ensure profile exists
+    profile, _ = Profile.objects.get_or_create(user=user)
+
+    picture_url = social_account.extra_data.get("picture")
+    if picture_url and profile.picture_url != picture_url:
+        profile.picture_url = picture_url
+        profile.save(update_fields=["picture_url"])
