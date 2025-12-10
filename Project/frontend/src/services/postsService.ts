@@ -54,6 +54,9 @@ export const deleteMarketplacePost = (id: number, signal?: AbortSignal) => {
   );
 };
 
+export const markPostAsSold = (id: number) =>
+  apiClient.patch<PostItem>(`/posts/my-listings/${id}/mark_as_sold/`, {});
+
 // Moderation endpoints
 export const getPostsForModeration = (
   page = 1,

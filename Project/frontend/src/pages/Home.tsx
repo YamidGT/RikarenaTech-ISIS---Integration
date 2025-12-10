@@ -270,7 +270,7 @@ export const Home: React.FC = () => {
       {/* Texto */}
       <div className="w-full px-4 md:px-15">
         <h2 className="mt-8 text-center md:text-left text-2xl md:text-[30px] leading-8 md:leading-9 font-[Outfit] font-bold text-neutral-900">
-          Fresh pick from local farms
+          Lo mejor, directo del campo local
         </h2>
       </div>
 
