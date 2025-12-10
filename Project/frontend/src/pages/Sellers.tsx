@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 import defaultAvatar from "@/assets/default-avatar.svg";
+import { showToast } from "@/lib/toast";
 import { getSellers } from "@/services/sellersService";
 import type { Seller } from "@/types/seller";
 
@@ -21,6 +22,11 @@ export const Sellers = () => {
         if (!controller.signal.aborted) {
           console.error("Error fetching sellers", err);
           setSellers([]);
+          const message =
+            err instanceof Error && err.message
+              ? err.message
+              : "Debes iniciar sesión para ver vendedores. Inicia sesión e inténtalo de nuevo.";
+          showToast("error", message);
         }
       } finally {
         if (!controller.signal.aborted) {
@@ -42,16 +48,21 @@ export const Sellers = () => {
         controller.signal,
       );
       setSellers(Array.isArray(data) ? data : []);
-    } catch (err) {
-      if (!controller.signal.aborted) {
-        console.error("Error fetching sellers", err);
-        setSellers([]);
+      } catch (err) {
+        if (!controller.signal.aborted) {
+          console.error("Error fetching sellers", err);
+          setSellers([]);
+          const message =
+            err instanceof Error && err.message
+              ? err.message
+              : "Debes iniciar sesión para ver vendedores. Inicia sesión e inténtalo de nuevo.";
+          showToast("error", message);
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
       }
-    } finally {
-      if (!controller.signal.aborted) {
-        setLoading(false);
-      }
-    }
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
