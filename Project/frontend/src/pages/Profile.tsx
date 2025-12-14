@@ -193,10 +193,10 @@ export const Profile: React.FC = () => {
 
       const payload = {
         first_name: form.username,
-        bio: cleanedBio || null,
-        cellphone_number: cleanedPhone ? parseInt(cleanedPhone, 10) : null,
-        municipality: form.municipalityId && form.municipalityId !== "" ? form.municipalityId : null,
-        picture_url: cleanedPicture || null,
+        bio: cleanedBio || undefined,
+        cellphone_number: cleanedPhone ? parseInt(cleanedPhone, 10) : undefined,
+        municipality: form.municipalityId === "" ? undefined : (form.municipalityId as number),
+        picture_url: cleanedPicture || undefined,
       };
 
       const updated = await updateUserProfile(myInfo.username, payload);
