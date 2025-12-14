@@ -13,7 +13,7 @@ def home(request):
 def login_with_turnstile(request):
     """Render login page with Turnstile"""
     context = {
-        'site_key': getattr(settings, 'TURNSTILE_SITE_KEY', ''),
+        "site_key": getattr(settings, "TURNSTILE_SITE_KEY", ""),
     }
     return render(request, "authentication/login.html", context)
 
