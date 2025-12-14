@@ -24,6 +24,7 @@ export const CreatePost: React.FC = () => {
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<number | "">("");
+  const [submitted, setSubmitted] = useState(false);
   type FormErrors = {
     title?: string;
     content?: string;
@@ -32,6 +33,7 @@ export const CreatePost: React.FC = () => {
   };
 
   const [errors, setErrors] = useState<FormErrors>({});
+
   const validateTitle = (value: string) => {
     if (value.length === 0) return "El título es obligatorio";
     if (value.length > 30) return "Máximo 30 caracteres";
@@ -129,6 +131,8 @@ export const CreatePost: React.FC = () => {
   };
   /* ---------------- GUARDAR ---------------- */
   const handleSave = async () => {
+    if (submitted) return;
+
     const newErrors: FormErrors = {
       title: validateTitle(form.title),
       content: validateContent(form.content),
@@ -142,6 +146,8 @@ export const CreatePost: React.FC = () => {
       showToast("error", "Corrige los errores del formulario");
       return;
     }
+
+    setSubmitted(true);
     const formData = new FormData();
 
     formData.append("title", form.title);
@@ -365,9 +371,10 @@ export const CreatePost: React.FC = () => {
 
           <button
             onClick={handleSave}
-            className="w-full h-[40px] mt-8 bg-[#448502] text-white rounded-md font-bold hover:bg-[#3C7602]"
+            disabled={submitted}
+            className="w-full h-[40px] mt-8 bg-[#448502] text-white rounded-md font-bold hover:bg-[#3C7602] disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Crear publicación
+            {submitted ? "Creando publicación..." : "Crear publicación"}
           </button>
         </div>
       </div>

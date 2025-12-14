@@ -246,6 +246,7 @@ class PostCreateUpdateSerializer(serializers.ModelSerializer):
         from django.conf import settings
 
         request = self.context["request"]
+
         validated_data["user"] = request.user
         validated_data["expires_at"] = self._normalize_expiry(
             validated_data.get("expires_at")
