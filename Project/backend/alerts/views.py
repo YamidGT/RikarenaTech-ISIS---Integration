@@ -134,8 +134,12 @@ class AlertViewSet(viewsets.ReadOnlyModelViewSet):
         # Apply pagination
         page = self.paginate_queryset(queryset)
         if page is not None:
-            serializer = AlertReadSerializer(page, many=True, context={"request": request})
+            serializer = AlertReadSerializer(
+                page, many=True, context={"request": request}
+            )
             return self.get_paginated_response(serializer.data)
 
-        serializer = AlertReadSerializer(queryset, many=True, context={"request": request})
+        serializer = AlertReadSerializer(
+            queryset, many=True, context={"request": request}
+        )
         return Response(serializer.data)
