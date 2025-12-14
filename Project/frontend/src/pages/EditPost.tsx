@@ -14,7 +14,7 @@ type FormState = {
   title: string;
   content: string;
   price: number | string;
-  images: string;
+  images: File[];
   quantity: number | string;
   unit_of_measure: string;
 };
@@ -23,7 +23,8 @@ export function EditPost() {
   const [item, setItem] = useState<PostItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [files] = useState<File[]>([]);
+  const [files, setFiles] = useState<File[]>([]);
+  const [dragActive, setDragActive] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<number | "">("");
   const { id } = useParams();
@@ -31,7 +32,7 @@ export function EditPost() {
     title: "",
     content: "",
     price: "",
-    images: "",
+    images: [],
     quantity: 0,
     unit_of_measure: "unidad",
   });
@@ -67,10 +68,47 @@ export function EditPost() {
         price: String(item.price),
         quantity: String(item.quantity),
         unit_of_measure: String(item.unit_of_measure),
-        images: "",
+        images: [],
       });
+      setFiles([]);
     }
   }, [item]);
+
+  const handleFilesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = Array.from(e.target.files || []);
+    if (selected.length > 3) {
+      showToast("error", "Puedes subir como máximo 3 imágenes.");
+      // keep only first 3
+      setFiles(selected.slice(0, 3));
+    } else {
+      setFiles(selected);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    const dropped = Array.from(e.dataTransfer.files || []);
+    if (dropped.length > 3) {
+      showToast("error", "Puedes subir como máximo 3 imágenes.");
+      setFiles(dropped.slice(0, 3));
+    } else {
+      setFiles(dropped);
+    }
+  };
   useEffect(() => {
     const controller = new AbortController();
     const loadCategories = async () => {
@@ -93,16 +131,44 @@ export function EditPost() {
     setSelectedCategory(value === "" ? "" : Number(value));
   };
   const handleSave = async () => {
+    // Validar campos requeridos
+    if (!form.title.trim()) {
+      showToast("error", "El título es obligatorio.");
+      return;
+    }
+    if (!form.content.trim()) {
+      showToast("error", "La descripción es obligatoria.");
+      return;
+    }
+    if (!form.price || isNaN(Number(form.price)) || Number(form.price) <= 0) {
+      showToast("error", "El precio debe ser un número mayor a 0.");
+      return;
+    }
+    if (
+      !form.quantity ||
+      isNaN(Number(form.quantity)) ||
+      Number(form.quantity) <= 0
+    ) {
+      showToast("error", "La cantidad debe ser un número mayor a 0.");
+      return;
+    }
+    if (!form.unit_of_measure.trim()) {
+      showToast("error", "La unidad de medida es obligatoria.");
+      return;
+    }
+
     // Crear FormData REAL con los archivos
     const formData = new FormData();
 
     // Añadir los campos de texto
-    formData.append("title", form.title);
-    formData.append("content", form.content);
-    formData.append("price", String(form.price));
-    formData.append("quantity", String(form.quantity));
-    formData.append("unit_of_measure", form.unit_of_measure);
-    formData.append("category", String(selectedCategory));
+    formData.append("title", form.title.trim());
+    formData.append("content", form.content.trim());
+    formData.append("price", String(Number(form.price)));
+    formData.append("quantity", String(Number(form.quantity)));
+    formData.append("unit_of_measure", form.unit_of_measure.trim());
+    if (selectedCategory !== "") {
+      formData.append("category", String(selectedCategory));
+    }
     files.forEach((file) => {
       formData.append("images", file);
     });
@@ -117,7 +183,7 @@ export function EditPost() {
       }, 2000);
     } catch (err: any) {
       const message = err instanceof Error ? err.message : "Error desconocido";
-      showToast("error", "Error al crear el post: " + message);
+      showToast("error", "Error al editar el post: " + message);
     }
   };
 
@@ -167,7 +233,20 @@ export function EditPost() {
               </p>
 
               {/* Área de subida */}
-              <div className="mt-2 border-2 border-neutral-300 border-dashed bg-neutral-200/20 rounded-xl w-full h-[580px] flex flex-col items-center justify-center">
+              <div
+                className={
+                  "mt-2 border-2 border-dashed bg-neutral-200/20 rounded-xl w-full h-[580px] flex flex-col items-center justify-center relative " +
+                  (dragActive
+                    ? "border-green-500 bg-neutral-200/30"
+                    : "border-neutral-300")
+                }
+                onDragOver={handleDragOver}
+                onDragEnter={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                role="button"
+                tabIndex={0}
+              >
                 {item.images && item.images.length > 0 ? (
                   <img
                     src={item.images[0].image}
@@ -187,7 +266,33 @@ export function EditPost() {
                     <p className="mt-4 font-[Inter] text-[16px] text-neutral-600 text-center">
                       Arrastra aquí una imagen o haz clic para subir un archivo
                     </p>
+
+                    {/* Invisible input cubre el área para hacerla clicable */}
+                    <input
+                      id="images-input"
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handleFilesChange}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    />
                   </>
+                )}
+              </div>
+
+              {/* File previews debajo del área */}
+              <div className="mt-4">
+                {files.length > 0 && (
+                  <div className="mt-3 flex gap-2">
+                    {files.map((file, idx) => (
+                      <img
+                        key={idx}
+                        src={URL.createObjectURL(file)}
+                        alt={`preview-${idx}`}
+                        className="w-20 h-20 object-cover rounded-md"
+                      />
+                    ))}
+                  </div>
                 )}
               </div>
             </div>
@@ -209,9 +314,13 @@ export function EditPost() {
                 </label>
                 <input
                   type="text"
-                  defaultValue={item.title}
+                  value={form.title}
+                  maxLength={200}
                   onChange={(e) =>
-                    setForm((prev) => ({ ...prev, title: e.target.value }))
+                    setForm((prev) => ({
+                      ...prev,
+                      title: e.target.value.slice(0, 200),
+                    }))
                   }
                   className="
                 w-full h-[49px] px-3
@@ -221,6 +330,9 @@ export function EditPost() {
                 focus:outline-none focus:ring-2 focus:ring-neutral-300/30
               "
                 />
+                <div className="text-xs text-neutral-500 mt-1">
+                  {form.title.length}/200
+                </div>
               </div>
 
               {/* ----- Campo: Descripción ----- */}
@@ -230,9 +342,13 @@ export function EditPost() {
                 </label>
 
                 <textarea
-                  defaultValue={item.content}
+                  value={form.content}
+                  maxLength={800}
                   onChange={(e) =>
-                    setForm((prev) => ({ ...prev, content: e.target.value }))
+                    setForm((prev) => ({
+                      ...prev,
+                      content: e.target.value.slice(0, 800),
+                    }))
                   }
                   className="
                 w-full h-[120px] px-3 py-2
@@ -242,6 +358,9 @@ export function EditPost() {
                 focus:outline-none focus:ring-2 focus:ring-neutral-300/30
               "
                 />
+                <div className="text-xs text-neutral-500 mt-1">
+                  {form.content.length}/800
+                </div>
               </div>
 
               {/* ----- Campo: Precio ----- */}
@@ -252,7 +371,7 @@ export function EditPost() {
                 <input
                   type="number"
                   className="w-full h-[49px] px-9 bg-neutral-200/10 border border-neutral-300 rounded-md font-[Inter] text-sm focus:outline-none focus:ring-2 focus:ring-neutral-300/30"
-                  defaultValue={item.price}
+                  value={String(form.price)}
                   onChange={(e) =>
                     setForm((prev) => ({ ...prev, price: e.target.value }))
                   }
@@ -269,11 +388,15 @@ export function EditPost() {
                 </label>
                 <input
                   type="number"
+                  min={0}
                   className="w-full h-[49px] px-3 bg-neutral-200/10 border border-neutral-300 rounded-md font-[Inter] text-sm focus:outline-none focus:ring-2 focus:ring-neutral-300/30"
-                  defaultValue={item.quantity}
-                  onChange={(e) =>
-                    setForm((prev) => ({ ...prev, quantity: e.target.value }))
-                  }
+                  value={String(form.quantity)}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    const n = Number(v);
+                    const nonNeg = isNaN(n) ? 0 : Math.max(0, n);
+                    setForm((prev) => ({ ...prev, quantity: String(nonNeg) }));
+                  }}
                 />
               </div>
 
@@ -284,7 +407,7 @@ export function EditPost() {
                 <input
                   type="text"
                   className="w-full h-[49px] px-3 font-[Inter] text-sm bg-neutral-200/10 border border-neutral-300 rounded-md hover:border-neutral-300 focus:outline-none focus:ring-2 focus:ring-neutral-300/30"
-                  defaultValue={item.unit_of_measure}
+                  value={form.unit_of_measure}
                   onChange={(e) =>
                     setForm((prev) => ({
                       ...prev,
