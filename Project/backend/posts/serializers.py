@@ -280,7 +280,33 @@ class PostCreateUpdateSerializer(serializers.ModelSerializer):
                 validated_data.get("expires_at")
             )
         try:
-            return super().update(instance, validated_data)
+            # Perform the normal update first
+            updated = super().update(instance, validated_data)
+
+            # Handle images uploaded in multipart PATCH/PUT requests
+            request = self.context.get("request")
+            if request is not None:
+                from django.conf import settings
+
+                images = request.FILES.getlist("images") or request.FILES.getlist(
+                    "images[]"
+                )
+                if images:
+                    # Enforce maximum images per post
+                    existing_count = instance.images.count()
+                    if existing_count + len(images) > settings.MAX_IMAGES_PER_POST:
+                        raise serializers.ValidationError(
+                            f"Too many images. Maximum {settings.MAX_IMAGES_PER_POST} allowed."
+                        )
+
+                    # Append new images preserving order
+                    start_index = existing_count
+                    for idx, image_file in enumerate(images):
+                        PostImage.objects.create(
+                            post=instance, image=image_file, order=start_index + idx
+                        )
+
+            return updated
         except IntegrityError as exc:
             raise serializers.ValidationError(
                 "No se pudo actualizar la publicación. Verifica las relaciones y vuelve a intentar."
