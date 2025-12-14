@@ -324,8 +324,12 @@ export default function CreateCrop() {
                 />
 
                 <div className="flex items-center justify-between mt-1">
-                  <small className={`text-sm ${cropTypeExceeded ? "text-red-600" : "text-neutral-500"}`}>
-                    {cropTypeExceeded ? `Tipo muy largo (máx ${CROP_TYPE_MAX_WORDS} palabras).` : `${cropTypeWordCount} palabra(s)`}
+                  <small
+                    className={`text-sm ${cropTypeExceeded ? "text-red-600" : "text-neutral-500"}`}
+                  >
+                    {cropTypeExceeded
+                      ? `Tipo muy largo (máx ${CROP_TYPE_MAX_WORDS} palabras).`
+                      : `${cropTypeWordCount} palabra(s)`}
                   </small>
 
                   {cropTypeExceeded && (
