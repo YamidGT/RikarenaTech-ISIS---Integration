@@ -252,7 +252,9 @@ class PostCreateUpdateSerializer(serializers.ModelSerializer):
         )
 
         # Get images from request FILES
-        images = request.FILES.getlist("images") or request.FILES.getlist("images[]")
+        images = request.FILES.getlist("images") or request.FILES.getlist(
+            "images[]"
+        )
 
         # Validate image count
         if len(images) > settings.MAX_IMAGES_PER_POST:
