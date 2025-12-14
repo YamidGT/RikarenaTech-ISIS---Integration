@@ -48,13 +48,16 @@ export default function PanelDeModerador() {
   const [statusSelection, setStatusSelection] = useState<
     Record<number, string>
   >({});
+  const [titleHasSpecialChars, setTitleHasSpecialChars] = useState(false);
+  const [descriptionHasSpecialChars, setDescriptionHasSpecialChars] =
+    useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const handleSelectFiles = (files: FileList | null) => {
     if (!files) return;
     const filesArr = Array.from(files);
 
-    const MAX_IMAGES = 10;
+    const MAX_IMAGES = 3;
     const currentCount = alertImages.length;
     const newCount = currentCount + filesArr.length;
 
@@ -163,14 +166,54 @@ export default function PanelDeModerador() {
     [],
   );
 
+  const validateAlertTitle = (value: string): boolean => {
+    // Solo letras, números, espacios, puntos, comas y guiones
+    const validPattern = /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s.,\-]+$/;
+    return validPattern.test(value);
+  };
+
+  const validateAlertDescription = (value: string): boolean => {
+    // Solo letras, números, espacios, puntos, comas, guiones y saltos de línea
+    const validPattern = /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s.,\-\n]+$/;
+    return validPattern.test(value);
+  };
+
   const handleSubmit = async () => {
     // Validaciones básicas
     if (!alertTitle.trim()) {
       showToast("error", "Por favor ingresa un título para la alerta");
       return;
     }
+    if (alertTitle.length > 50) {
+      showToast(
+        "error",
+        "El título no puede exceder los 50 caracteres.",
+      );
+      return;
+    }
+    if (!validateAlertTitle(alertTitle)) {
+      showToast(
+        "error",
+        "El título no puede contener caracteres especiales. Solo letras, números, espacios, puntos, comas y guiones.",
+      );
+      return;
+    }
     if (!alertDescription.trim()) {
       showToast("error", "Por favor ingresa una descripción para la alerta");
+      return;
+    }
+    if (alertDescription.length > 800) {
+      showToast(
+        "error",
+        "La descripción no puede exceder los 800 caracteres.",
+      );
+      return;
+    }
+    if (!validateAlertDescription(alertDescription)) {
+      showToast(
+        "error",
+        "La descripción no puede contener caracteres especiales. Solo letras, números, espacios, puntos, comas y guiones.",
+      );
       return;
     }
     if (!selectedCategory) {
@@ -183,7 +226,7 @@ export default function PanelDeModerador() {
     }
 
     // Validar número máximo de imágenes
-    const MAX_IMAGES = 10;
+    const MAX_IMAGES = 3;
     if (alertImages.length > MAX_IMAGES) {
       showToast(
         "error",
@@ -456,38 +499,67 @@ export default function PanelDeModerador() {
               <div className="flex flex-col gap-1">
                 <label className="font-[Inter] text-sm font-medium text-neutral-900">
                   Titulo de la Alerta
+                  <span className="text-neutral-500 ml-2">
+                    ({alertTitle.length}/50 caracteres)
+                  </span>
                 </label>
                 <input
                   type="text"
                   placeholder=""
+                  maxLength={50}
                   value={alertTitle}
-                  onChange={(e) => setAlertTitle(e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setAlertTitle(value);
+                    setTitleHasSpecialChars(!validateAlertTitle(value) && value.length > 0);
+                  }}
                   className="w-full h-[45px] px-3 font-[Inter] text-sm bg-neutral-200/10 
                     border border-neutral-300 rounded-md focus:ring-2 
                     focus:ring-neutral-300/30 focus:outline-none"
                 />
+                {titleHasSpecialChars && (
+                  <p className="text-red-600 text-xs mt-1">
+                    ⚠️ El título contiene caracteres especiales no permitidos. Solo se permiten letras, números, espacios, puntos, comas y guiones.
+                  </p>
+                )}
               </div>
 
               {/* ----- Campo: Descripción ----- */}
               <div className="flex flex-col gap-1">
                 <label className="font-[Inter] text-sm font-medium text-neutral-900">
                   Descripción
+                  <span className="text-neutral-500 ml-2">
+                    ({alertDescription.length}/800 caracteres)
+                  </span>
                 </label>
 
                 <textarea
                   placeholder=""
                   value={alertDescription}
-                  onChange={(e) => setAlertDescription(e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setAlertDescription(value);
+                    setDescriptionHasSpecialChars(!validateAlertDescription(value) && value.length > 0);
+                  }}
+                  maxLength={800}
                   className="w-full h-[120px] px-3 py-2 font-[Inter] text-sm text-neutral-900 
                     bg-neutral-200/10 border border-neutral-300 rounded-md 
                     focus:ring-2 focus:ring-neutral-300/30 focus:outline-none"
                 />
+                {descriptionHasSpecialChars && (
+                  <p className="text-red-600 text-xs mt-1">
+                    ⚠️ La descripción contiene caracteres especiales no permitidos. Solo se permiten letras, números, espacios, puntos, comas y guiones.
+                  </p>
+                )}
               </div>
 
               {/* ----- Subida de imagen ----- */}
               <div className="flex flex-col gap-2">
                 <label className="font-[Inter] text-sm font-medium text-neutral-900">
-                  Imágenes de la Alerta
+                  Imágenes de la Alerta 
+                  <span className="text-neutral-500 ml-2">
+                    ( Maximo 3 imágenes)
+                  </span>
                 </label>
 
                 <input
@@ -643,7 +715,7 @@ export default function PanelDeModerador() {
               <button
                 type="button"
                 onClick={handleSubmit}
-                disabled={loading}
+                disabled={loading || titleHasSpecialChars || descriptionHasSpecialChars}
                 className="w-full h-[45px] bg-[#448502] text-white rounded-md 
                   font-[Inter] font-semibold hover:bg-[#3C7602] active:bg-[#2F5D01]
                   disabled:opacity-50 disabled:cursor-not-allowed"
