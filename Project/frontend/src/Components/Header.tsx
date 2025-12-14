@@ -271,9 +271,7 @@ export const Header: React.FC = () => {
               </button>
             </a>
           ) : (
-            <a
-              href={`${import.meta.env.VITE_API_BASE_URL}/login/`}
-            >
+            <a href={`${import.meta.env.VITE_API_BASE_URL}/login/`}>
               <button className="flex items-center justify-center px-4 py-2 h-9 rounded-md bg-[#448502] text-white text-sm font-medium hover:bg-[#3C7602] active:bg-[#2F5D01] font-[Inter] transition whitespace-nowrap">
                 <span className="mr-2 hidden xs:inline">→</span>
                 Login

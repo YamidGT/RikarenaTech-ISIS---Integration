@@ -130,24 +130,24 @@ export const CreatePost: React.FC = () => {
     return value.replace(/\./g, "").replace(/,/g, "");
   };
   /* ---------------- GUARDAR ---------------- */
-   const handleSave = async () => {
-     if (submitted) return;
+  const handleSave = async () => {
+    if (submitted) return;
 
-     const newErrors: FormErrors = {
-       title: validateTitle(form.title),
-       content: validateContent(form.content),
-       price: validatePrice(form.price),
-       quantity: validateQuantity(form.quantity),
-     };
+    const newErrors: FormErrors = {
+      title: validateTitle(form.title),
+      content: validateContent(form.content),
+      price: validatePrice(form.price),
+      quantity: validateQuantity(form.quantity),
+    };
 
-     setErrors(newErrors);
+    setErrors(newErrors);
 
-     if (Object.values(newErrors).some(Boolean)) {
-       showToast("error", "Corrige los errores del formulario");
-       return;
-     }
+    if (Object.values(newErrors).some(Boolean)) {
+      showToast("error", "Corrige los errores del formulario");
+      return;
+    }
 
-     setSubmitted(true);
+    setSubmitted(true);
     const formData = new FormData();
 
     formData.append("title", form.title);
@@ -368,7 +368,6 @@ export const CreatePost: React.FC = () => {
               ))}
             </select>
           </div>
-
 
           <button
             onClick={handleSave}
