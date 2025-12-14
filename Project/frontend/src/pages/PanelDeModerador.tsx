@@ -209,9 +209,7 @@ export default function PanelDeModerador() {
         setMyAlerts(result.data || []);
       } else {
         const errorData = await response.json();
-        setMyAlertsError(
-          errorData.message || "Error al cargar tus alertas",
-        );
+        setMyAlertsError(errorData.message || "Error al cargar tus alertas");
       }
     } catch (error) {
       console.error("Error fetching my alerts:", error);
@@ -230,13 +228,13 @@ export default function PanelDeModerador() {
 
   const validateAlertTitle = (value: string): boolean => {
     // Solo letras, números, espacios, puntos, comas y guiones
-    const validPattern = /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s.,\-]+$/;
+    const validPattern = /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s.,-]+$/;
     return validPattern.test(value);
   };
 
   const validateAlertDescription = (value: string): boolean => {
     // Solo letras, números, espacios, puntos, comas, guiones y saltos de línea
-    const validPattern = /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s.,\-\n]+$/;
+    const validPattern = /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s.,\n-]+$/;
     return validPattern.test(value);
   };
 
@@ -247,10 +245,7 @@ export default function PanelDeModerador() {
       return;
     }
     if (alertTitle.length > 50) {
-      showToast(
-        "error",
-        "El título no puede exceder los 50 caracteres.",
-      );
+      showToast("error", "El título no puede exceder los 50 caracteres.");
       return;
     }
     if (!validateAlertTitle(alertTitle)) {
@@ -265,10 +260,7 @@ export default function PanelDeModerador() {
       return;
     }
     if (alertDescription.length > 800) {
-      showToast(
-        "error",
-        "La descripción no puede exceder los 800 caracteres.",
-      );
+      showToast("error", "La descripción no puede exceder los 800 caracteres.");
       return;
     }
     if (!validateAlertDescription(alertDescription)) {
@@ -573,7 +565,9 @@ export default function PanelDeModerador() {
                   onChange={(e) => {
                     const value = e.target.value;
                     setAlertTitle(value);
-                    setTitleHasSpecialChars(!validateAlertTitle(value) && value.length > 0);
+                    setTitleHasSpecialChars(
+                      !validateAlertTitle(value) && value.length > 0,
+                    );
                   }}
                   className="w-full h-[45px] px-3 font-[Inter] text-sm bg-neutral-200/10 
                     border border-neutral-300 rounded-md focus:ring-2 
@@ -581,7 +575,9 @@ export default function PanelDeModerador() {
                 />
                 {titleHasSpecialChars && (
                   <p className="text-red-600 text-xs mt-1">
-                    ⚠️ El título contiene caracteres especiales no permitidos. Solo se permiten letras, números, espacios, puntos, comas y guiones.
+                    ⚠️ El título contiene caracteres especiales no permitidos.
+                    Solo se permiten letras, números, espacios, puntos, comas y
+                    guiones.
                   </p>
                 )}
               </div>
@@ -601,7 +597,9 @@ export default function PanelDeModerador() {
                   onChange={(e) => {
                     const value = e.target.value;
                     setAlertDescription(value);
-                    setDescriptionHasSpecialChars(!validateAlertDescription(value) && value.length > 0);
+                    setDescriptionHasSpecialChars(
+                      !validateAlertDescription(value) && value.length > 0,
+                    );
                   }}
                   maxLength={800}
                   className="w-full h-[120px] px-3 py-2 font-[Inter] text-sm text-neutral-900 
@@ -610,7 +608,9 @@ export default function PanelDeModerador() {
                 />
                 {descriptionHasSpecialChars && (
                   <p className="text-red-600 text-xs mt-1">
-                    ⚠️ La descripción contiene caracteres especiales no permitidos. Solo se permiten letras, números, espacios, puntos, comas y guiones.
+                    ⚠️ La descripción contiene caracteres especiales no
+                    permitidos. Solo se permiten letras, números, espacios,
+                    puntos, comas y guiones.
                   </p>
                 )}
               </div>
@@ -618,7 +618,7 @@ export default function PanelDeModerador() {
               {/* ----- Subida de imagen ----- */}
               <div className="flex flex-col gap-2">
                 <label className="font-[Inter] text-sm font-medium text-neutral-900">
-                  Imágenes de la Alerta 
+                  Imágenes de la Alerta
                   <span className="text-neutral-500 ml-2">
                     ( Maximo 3 imágenes)
                   </span>
@@ -777,7 +777,9 @@ export default function PanelDeModerador() {
               <button
                 type="button"
                 onClick={handleSubmit}
-                disabled={loading || titleHasSpecialChars || descriptionHasSpecialChars}
+                disabled={
+                  loading || titleHasSpecialChars || descriptionHasSpecialChars
+                }
                 className="w-full h-[45px] bg-[#448502] text-white rounded-md 
                   font-[Inter] font-semibold hover:bg-[#3C7602] active:bg-[#2F5D01]
                   disabled:opacity-50 disabled:cursor-not-allowed"
